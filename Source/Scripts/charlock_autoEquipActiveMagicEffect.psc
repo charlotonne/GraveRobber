@@ -1,76 +1,44 @@
 ScriptName charlock_autoEquipActiveMagicEffect extends ActiveMagicEffect
 
-Actor property PlayerRef auto
-Spell property charlock_npcAutoEquipSpell auto
+Actor property PlayerRef auto;
+Spell property charlock_npcAutoEquipSpell auto;
+charlock_helperFunctions hFunc = None;
 
-Weapon Function GetHighestValueWeapon(Actor akActor)
-	Int iLoopCount = (akActor as ObjectReference).GetNumItems()
-	Int highestValue = -1
-	Form highestValWeapon
-	While iLoopCount > 0
-		iLoopCount -= 1
-		Form kForm = (akActor as ObjectReference).GetNthForm(iLoopCount)
-		If kForm.GetType() == 41 && kForm.GetGoldValue() > highestValue
-			highestValWeapon = kForm
-			highestValue = kform.GetGoldValue()
-		EndIf
-	EndWhile
-	return highestValWeapon as Weapon
-EndFunction
-
+; The moment this ability is attached to the player,
+; we need to register a listener on three actions.
 Event OnInit()
-	RegisterForActorAction(0)
-	RegisterForActorAction(6)
-	;Debug.MessageBox("Successfully initiated the autoequip MagicEffect.")
+	hFunc = charlock_helperFunctions.GetScript();
+	RegisterForActorAction(0); Weapon Swing = 0
+	RegisterForActorAction(6); Bow Release = 6
+	RegisterForActorAction(8); Draw End = 8
 EndEvent
 
+; Now to handle the previously registered listeners.
 Event OnActorAction(int actionType, Actor akActor, Form source, int slot)
-	;Debug.MessageBox("Well, you certainly did something!")
-	If akActor == PlayerRef
-		Actor TargetRef = Game.GetCurrentCrosshairRef() as Actor
+	Actor[] kNearbyActors;
+	int iActorIndex = -1;
+	Actor TargetRef = Game.GetCurrentCrosshairRef() as Actor
 
-		If TargetRef
-			Debug.MessageBox("Got target ref: " + TargetRef)
-			If TargetRef.IsDead() && TargetRef.GetKiller() == PlayerRef
-				Weapon PlayerLeftWeapon = PlayerRef.GetEquippedWeapon(true)
-				Weapon PlayerRightWeapon = PlayerRef.GetEquippedWeapon(false)
-				Weapon TargetRightWeapon = GetHighestValueWeapon(TargetRef)
-				Weapon TargetLeftWeapon = TargetRef.GetEquippedWeapon(true)
-
-				If PlayerLeftWeapon
-					PlayerRef.UnequipItem(PlayerLeftWeapon, false, true)
-					PlayerRef.RemoveItem(PlayerLeftWeapon, 1, true, None)
-				EndIf
-				If PlayerRightWeapon
-					PlayerRef.UnequipItem(PlayerRightWeapon, false, true)
-					PlayerRef.RemoveItem(PlayerRightWeapon, 1, true, None)
-				EndIf
-
-				If TargetLeftWeapon
-					TargetRef.UnequipItem(TargetLeftWeapon, false, true)
-					;Debug.MessageBox("Unequipped Left weapon")
-					TargetRef.RemoveItem(TargetLeftWeapon, 1, true, None)
-					;Debug.MessageBox("removed Left weapon")
-					PlayerRef.AddItem(TargetLeftWeapon, 1, true)
-					;Debug.MessageBox("added Left weapon")
-					PlayerRef.EquipItemEx(TargetLeftWeapon, 2, false, true)
-					;Debug.MessageBox("equipped Left weapon" + TargetLeftWeapon.GetName())
-				EndIf
-				If TargetRightWeapon
-					TargetRef.UnequipItem(TargetRightWeapon, false, true)
-					;Debug.MessageBox("Unequipped right weapon")
-					TargetRef.RemoveItem(TargetRightWeapon, 1, true, None)
-					;Debug.MessageBox("removed right weapon")
-					PlayerRef.AddItem(TargetRightWeapon, 1, true)
-					;Debug.MessageBox("added right weapon")
-					PlayerRef.EquipItemEx(TargetRightWeapon, 1, false, true)
-					;Debug.MessageBox("equipped right weapon: " + TargetRightWeapon.GetName())
-				EndIf
-			EndIf
-			If !TargetRef.HasSpell(charlock_npcAutoEquipSpell)
-				;Debug.Notification("Target got some sweet spell added")
-				TargetRef.AddSpell(charlock_npcAutoEquipSpell)
-			EndIf
-		EndIf
-	EndIf
-EndEvent
+	; First, let's ensure that it's the player that activated this particular action.
+	if akActor == PlayerRef
+		; Now, let's handle the main event, which is if the player has just drawn their weapon.
+		if actionType == 8
+			; First, we'll look for all actors that are close to the player.
+			kNearbyActors = hFunc.GetNearbyActors()
+			; Now, we iterate through those nearby actors and add the proper
+			; magic effect onto them.
+			while iActorIndex < kNearbyActors.Length
+				iActorIndex += 1;
+				if !kNearbyActors[iActorIndex].HasSpell(charlock_npcAutoEquipSpell)
+					kNearbyActors[iActorIndex].AddSpell(charlock_npcAutoEquipSpell);
+				endIf
+			endWhile
+		else
+			; For the other listeners, we just want to double-check that whatever the player's
+			; crosshairs are aimed at has also had the spell added.
+			if !TargetRef.HasSpell(charlock_npcAutoEquipSpell)
+				TargetRef.AddSpell(charlock_npcAutoEquipSpell);
+			endIf
+		endIf
+	endIf
+endEvent

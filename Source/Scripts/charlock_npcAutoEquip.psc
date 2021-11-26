@@ -1,51 +1,96 @@
 ScriptName charlock_npcAutoEquip Extends ActiveMagicEffect  
+{This script contains the effect necessary for the NPC to operate.}
+
+; This will allow us to use the functions located in charlock_helperFunctions
+charlock_helperFunctions hFunc = None;
 
 Actor property PlayerRef Auto
+
+; We are declaring these ahead of time in order to use them in both events.
 Actor TargetRef
-Weapon TargetLeftWeapon
-Weapon TargetRightWeapon
+Form TargetLeftWeapon
+Form TargetRightWeapon
 
 Event OnInit()
-	TargetRef = GetCasterActor()
-	TargetLeftWeapon = TargetRef.GetEquippedWeapon(true)
-	TargetRightWeapon = TargetRef.GetEquippedWeapon(false)
+	hFunc = charlock_helperFunctions.GetScript();
+	; This will allow us to work with the player's target and listen for their death.
+	; Additionally, we declare it here so that we can pre-grab what their equipped weapon is.
+	TargetRef = GetCasterActor();
+	TargetLeftWeapon = hFunc.FindEquippedForm(TargetRef, true);
+	TargetRightWeapon = hFunc.FindEquippedForm(TargetRef, false);
 EndEvent
 
-Event OnDying(Actor akKiller)
-	If akKiller == PlayerRef
-		Weapon PlayerLeftWeapon = PlayerRef.GetEquippedWeapon(true)
-		Weapon PlayerRightWeapon = PlayerRef.GetEquippedWeapon(false)
+; We're going to update the equipped weapon whenever the NPC
+; enters into combat.
+Event OnCombatStateChanged(Actor akTarget, int aeCombatState)
+	if aeCombatState == 1
+		TargetLeftWeapon = hFunc.FindEquippedForm(TargetRef, true);
+		TargetRightWeapon = hFunc.FindEquippedForm(TargetRef, false);
+	endIf
+endEvent
 
-		If PlayerLeftWeapon
-			PlayerRef.UnequipItem(PlayerLeftWeapon, false, true)
-			PlayerRef.RemoveItem(PlayerLeftWeapon, 1, true, None)
-		EndIf
-		If PlayerRightWeapon
-			PlayerRef.UnequipItem(PlayerRightWeapon, false, true)
-			PlayerRef.RemoveItem(PlayerRightWeapon, 1, true, None)
-		EndIf
+; This is the actual weapon swap script.
+; It will occur whenever this particular NPC bites the dust.
+Event OnDeath(Actor akKiller)
+	int iLeftType = -1;
+	int iRightType = -1;
 
-		If TargetLeftWeapon
-			TargetRef.UnequipItem(TargetLeftWeapon, false, true)
-			;Debug.MessageBox("Unequipped Left weapon")
-			TargetRef.RemoveItem(TargetLeftWeapon, 1, true, None)
-			;Debug.MessageBox("removed Left weapon")
-			PlayerRef.AddItem(TargetLeftWeapon, 1, true)
-			;Debug.MessageBox("added Left weapon")
-			PlayerRef.EquipItemEx(TargetLeftWeapon, 2, false, true)
-			;Debug.MessageBox("equipped Left weapon" + TargetLeftWeapon.GetName())
-		EndIf
-		If TargetRightWeapon
-			TargetRef.UnequipItem(TargetRightWeapon, false, true)
-			;Debug.MessageBox("Unequipped right weapon")
-			TargetRef.RemoveItem(TargetRightWeapon, 1, true, None)
-			;Debug.MessageBox("removed right weapon")
-			PlayerRef.AddItem(TargetRightWeapon, 1, true)
-			;Debug.MessageBox("added right weapon")
-			PlayerRef.EquipItemEx(TargetRightWeapon, 1, false, true)
-			;Debug.MessageBox("equipped right weapon: " + TargetRightWeapon.GetName())
-		EndIf
+	; We need to make sure that the event was triggered specifically
+	; by the player killing the NPC.
+	if akKiller == PlayerRef
+		; Now that we know the player has murdered, it's time to
+		; yoink their current weapons.
+		hFunc.RemoveActorWeapons(PlayerRef);
 
-		;Debug.Notification("Your terrible curse has activated ...")
-	EndIf
-EndEvent
+		; Now, we need to look to see if the NPC is wielding anything.
+		if TargetLeftWeapon || TargetRightWeapon
+			; So far, so good. Now let's check if the left weapon exists.
+			if TargetLeftWeapon
+				; It does, so we need to get the form type to properly handle it.
+				iLeftType = TargetLeftWeapon.GetType();
+				if iLeftType == 41; kWeapon = 41
+					; First, we'll unequip and remove the item from the target.
+					; We'll also check around the target to ensure it didn't just drop into the world.
+					TargetRef.UnequipItemEx(TargetLeftWeapon, equipSlot = 2, preventEquip = false);
+					TargetRef.RemoveItem(TargetLeftWeapon, aiCount = 1, abSilent = true);
+					(hFunc.GetNearbyForm(TargetRef, TargetLeftWeapon) as ObjectReference).DisableNoWait(true);
+					; Now, we can add and equip the weapon to the proper slot on the player.
+					PlayerRef.AddItem(TargetLeftWeapon, aiCount = 1, abSilent = true);
+					PlayerRef.EquipItemEx(TargetLeftWeapon, equipSlot = 2, preventUnequip = false, equipSound = false);
+				elseif iLeftType == 22; kSpell = 22
+					; There's nowhere near the same amount of stuff to do here.
+					; We just need to check if the player has the spell, add it if not.
+					; Then equip the spell to the player.
+					if !PlayerRef.HasSpell(TargetLeftWeapon as Spell)
+						PlayerRef.AddSpell(TargetLeftWeapon as Spell, abVerbose = false);
+					endIf
+					PlayerRef.EquipSpell(TargetLeftWeapon as Spell, 0);
+				endIf
+			endIf
+
+			; We do the same thing for the right hand
+			if TargetRightWeapon
+				; It does, so we need to get the form type to properly handle it.
+				iRightType = TargetRightWeapon.GetType();
+				if iRightType == 41; kWeapon = 41
+					; First, we'll unequip and remove the item from the target.
+					; We'll also check around the target to ensure it didn't just drop into the world.
+					TargetRef.UnequipItemEx(TargetRightWeapon, equipSlot = 1, preventEquip = false);
+					TargetRef.RemoveItem(TargetRightWeapon, aiCount = 1, abSilent = true);
+					(hFunc.GetNearbyForm(TargetRef, TargetRightWeapon) as ObjectReference).DisableNoWait(true);
+					; Now, we can add and equip the weapon to the proper slot on the player.
+					PlayerRef.AddItem(TargetRightWeapon, aiCount = 1, abSilent = true);
+					PlayerRef.EquipItemEx(TargetRightWeapon, equipSlot = 1, preventUnequip = false, equipSound = false);
+				elseif iRightType == 22; kSpell = 22
+					; There's nowhere near the same amount of stuff to do here.
+					; We just need to check if the player has the spell, add it if not.
+					; Then equip the spell to the player.
+					if !PlayerRef.HasSpell(TargetRightWeapon)
+						PlayerRef.AddSpell(TargetRightWeapon as Spell, abVerbose = false);
+					endIf
+					PlayerRef.EquipSpell(TargetRightWeapon as Spell, 0);
+				endIf
+			endIf
+		endIf
+	endIf
+endEvent
