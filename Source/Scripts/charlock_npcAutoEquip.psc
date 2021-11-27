@@ -96,13 +96,13 @@ Event OnDeath(Actor akKiller)
 
 			if iRightType == 41 && !kAmmo && !iAmmoCount
 				if (TargetRightWeapon as Weapon).GetWeaponType() == 9 || (TargetRightWeapon as Weapon).GetWeaponType() == 7
-					kAmmo = GetEquippedAmmo(TargetRef);
+					kAmmo = hFunc.GetEquippedAmmo(TargetRef);
 					iAmmoCount = (TargetRef as ObjectReference).GetItemCount(kAmmo);
 				endIf
 			endIf
 			if iLeftType == 41 && !kAmmo && !iAmmoCount
 				if (TargetLeftWeapon as Weapon).GetWeaponType() == 9 || (TargetLeftWeapon as Weapon).GetWeaponType() == 7
-					kAmmo = GetEquippedAmmo(TargetRef);
+					kAmmo = hFunc.GetEquippedAmmo(TargetRef);
 					iAmmoCount = (TargetRef as ObjectReference).GetItemCount(kAmmo);
 				endIf
 			endIf
