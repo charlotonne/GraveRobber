@@ -147,7 +147,7 @@ function RemoveActorWeapons(Actor kActorRef)
         kActorRef.UnequipSpell(kActorRightSpell, 1); Right Hand = 1
     endIf
     if kActorLeftSpell
-        kActorRef.UnequipSpell(kActorRightSpell, 0); Left Hand = 0
+        kActorRef.UnequipSpell(kActorLeftSpell, 0); Left Hand = 0
     endIf
 endFunction
 
@@ -172,7 +172,30 @@ Form function GetNearbyForm(Actor kActor, Form kTargetForm)
         endIf
     endWhile
     
-    return kCurrentForm;
+    return kLocatedForm;
+endFunction
+
+;
+; This function will allow us to look near an actor (or corpse) for a
+; weapon of some kind. If we find one, we'll check in the actor's inventory.
+; If it's present, return it, otherwise, no.
+;
+Weapon function FindNearbyWeapon(Actor kActor)
+    Cell kCell = kActor.GetParentCell();
+    int iFormTypeFilter = 41; kWeapon = 41
+    int iFormCount = kCell.GetNumRefs(iFormTypeFilter);
+    int iFormIndex = -1;
+    Form kCurrentForm = None;
+    Form kLocatedForm = None;
+
+    while iFormIndex < iFormCount && !kLocatedForm
+        iFormIndex += 1;
+        kCurrentForm = kCell.GetNthRef(iFormIndex, 41) as Form;
+        if kActor.GetItemCount(kCurrentForm)
+            kLocatedForm = kCurrentForm;
+        endIf
+    endWhile
+    return kLocatedForm as Weapon;
 endFunction
 
 ;
@@ -195,6 +218,18 @@ Form function FindEquippedForm(Actor kActor, bool leftHand = false)
     Form kFormDesired = None;
     
     ; If there is no weapon or spell in any slot, we'll check
+    ; through the inventory. This one is specifically for when the
+    ; actor is dead.
+    if !kWeaponLeft && !kWeaponRight && !kSpellLeft && !kSpellRight
+        ; First, we need to check if this NPC is dead right now.
+        if kActor.GetKiller()
+            if FindNearbyWeapon(kActor)
+                kWeaponRight = FindNearbyWeapon(kActor);
+            endIf
+        endIf
+    endIf
+
+    ; If there is no weapon or spell in any slot, we'll check
     ; through the inventory.
     if !kWeaponLeft && !kWeaponRight && !kSpellLeft && !kSpellRight
         ; Let's see if this actor has ammo equipped for some reason and no weapon.
@@ -205,19 +240,20 @@ Form function FindEquippedForm(Actor kActor, bool leftHand = false)
                 kWeaponDesired = GetHighestValueWeapon(kActor, 9); Crossbows = 9
             else
                 kWeaponDesired = GetHighestValueWeapon(kActor, 7); Bows = 7
-            endIf
-        else
+           endIf
+       else
             ; Well, that was a bust, so we need to search through the inventory
             ; for the highest value weapon.
             kWeaponDesired = GetHighestValueWeapon(kActor);
         endIf
     endIf
+    
     if kWeaponDesired && !kSpellDesired
         kFormDesired = kWeaponDesired;
     elseif kSpellDesired && !kWeaponDesired
         kFormDesired = kSpellDesired;
     else
-        kFormDesired = None
+        kFormDesired = None;
     endIf
     return kFormDesired;
 endFunction
