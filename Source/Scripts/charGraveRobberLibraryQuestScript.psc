@@ -1,12 +1,13 @@
-ScriptName charlock_helperFunctions Extends Quest
+ScriptName charGraveRobberLibraryQuestScript Extends Quest
 
 Static property XMarker auto;
+Actor property PlayerRef auto;
 
 ;
 ; This function allows for the script itself to be used by other scripts
 ;
-charlock_helperFunctions function GetScript() global
-	return Game.GetFormFromFile(0x00000809, "GraveRobber.esp") as charlock_helperFunctions
+charGraveRobberLibraryQuestScript function GetScript() global
+	return Game.GetFormFromFile(0x00000809, "GraveRobber.esp") as charGraveRobberLibraryQuestScript;
 endFunction
 
 ;
@@ -19,8 +20,8 @@ endFunction
 ; exhausted all actors in the given radius.
 ;
 Actor[] function GetNearbyActors(float fRadius = 4096.00, int iStep = 5)
-    Actor kPlayerRef = Game.GetPlayer();
-    Actor[] kTargetRef = new Actor[50];
+    Actor kPlayerRef = PlayerRef;
+    Actor[] kTargetRef = new Actor[10];
     Actor kNthRef = None;
 
     Cell kCell = kPlayerRef.GetParentCell();
@@ -99,56 +100,43 @@ endFunction
 ; a bow, it will also remove the arrows. If the actor is wielding magic, it will
 ; swap them to fists.
 ;
-function RemoveActorWeapons(Actor kActorRef)
-    Weapon kActorRightWeapon = kActorRef.GetEquippedWeapon(false);
-    Weapon kActorLeftWeapon = kActorRef.GetEquippedWeapon(true);
-    Spell kActorRightSpell = kActorRef.GetEquippedSpell(1); Right Hand = 1
-    Spell kActorLeftSpell = kActorRef.GetEquippedSpell(0); Left Hand = 0
+function DisarmActor(Actor akActor)
+  Form kLeftEquip = akActor.GetEquippedObject(0); Left Hand = 0
+  Form kRightEquip = akActor.GetEquippedObject(1); Right Hand = 1
+  Form kShoutEquip = akActor.GetEquippedObject(2); Shout = 2
 
-    int iInventoryIndex = -1;
-    int iInventoryLength = (kActorRef as ObjectReference).GetNumItems();
-    Form kCurrentForm = None;
-    Ammo kActorAmmo = None;
-    int iAmmoCount = 0;
+  Ammo kAmmoEquip = None;
+  int iAmmoCount = 0;
 
-    ; In this check, we'll be removing the actor's ammunition if they have a ranged weapon wielded.
-    ; We'll first check if the player has either a left or right weapon.
-    if kActorRightWeapon || kActorLeftWeapon
-        ; Now, we need to check if the weapon is a bow or crossbow.
-        ; Bow = 7
-        ; Crossbow = 9
-        if kActorRightWeapon.GetWeaponType() == 7 || kActorRightWeapon.GetWeaponType() == 9 || kActorLeftWeapon.GetWeaponType() == 7 || kActorLeftWeapon.GetWeaponType() == 9
-            ; Now, we'll be cycling through the actor's inventory for any equipped ammo.
-            ; I'll be honest -- I'm doing it this way because I have no idea what slot ammo is equipped to.
-            ; And it doesn't seem to be documented anywhere.
-            kActorAmmo = GetEquippedAmmo(kActorRef);
-            ; Just in case we couldn't find any equipped ammo, we'll check to ensure it exists.
-            if kActorAmmo
-                iAmmoCount = (kActorRef as ObjectReference).GetItemCount(kActorAmmo);
-                kActorRef.UnequipItem(kActorAmmo, abPreventEquip = false, abSilent = true);
-                kActorRef.RemoveItem(kActorAmmo, aiCount = iAmmoCount, abSilent = true);
-            endIf
-        endIf
-    endIf
+  int iLeftType = akActor.GetEquippedItemType(0); Left Hand = 0
+  int iRightType = akActor.GetEquippedItemType(1); Right Hand = 1
 
-    ; Alright, now we'll cycle through whether or not the actor is wielding a standard weapon.
-    ; If they are, we'll yank that right off of them.
-    if kActorRightWeapon
-        kActorRef.UnequipItem(kActorRightWeapon, abPreventEquip = false, abSilent = true);
-        kActorRef.RemoveItem(kActorRightWeapon, aiCount = 1, abSilent = true);
-    endIf
-    if kActorLeftWeapon
-        kActorRef.UnequipItem(kActorLeftWeapon, abPreventEquip = false, abSilent = true);
-        kActorRef.RemoveItem(kActorLeftWeapon, aiCount = 1, abSilent = true);
-    endIf
+  if iLeftType != 9 && iLeftType != 0
+    akActor.UnequipItemEx(kLeftEquip, equipSlot = 2, preventEquip = false); Left Hand = 2
+   akActor.RemoveItem(kLeftEquip, aiCount = 1, abSilent = true, akOtherContainer = None);
+  elseif iLeftType == 9
+    akActor.UnequipSpell(kLeftEquip as Spell, 0); Left Hand = 0
+  endIf
 
-    ; Finally, we need to check for whether or not the actor is wielding a spell so we can stop that.
-    if kActorRightSpell
-        kActorRef.UnequipSpell(kActorRightSpell, 1); Right Hand = 1
+  if iRightType != 9 && iRightType != 0
+    akActor.UnequipItemEx(kRightEquip, equipSlot = 1, preventEquip = false); Right Hand = 1
+    akActor.RemoveItem(kRightEquip, aiCount = 1, abSilent = true, akOtherContainer = None);
+  elseif iRightType == 9
+    akActor.UnequipSpell(kRightEquip as Spell, 1); Right Hand = 1
+  endIf
+
+  if iRightType == 7 || iRightType == 12 || iLeftType == 7 || iLeftType == 12
+    kAmmoEquip = GetEquippedAmmo(akActor);
+    iAmmoCount = akActor.GetItemCount(kAmmoEquip as Form);
+    if kAmmoEquip && iAmmoCount
+      akActor.UnequipItemEx(kAmmoEquip, equipSlot = 0, preventEquip = false); Default = 0
+      akActor.RemoveItem(kAmmoEquip, aiCount = iAmmoCount, abSilent = true, akOtherContainer = None);
     endIf
-    if kActorLeftSpell
-        kActorRef.UnequipSpell(kActorLeftSpell, 0); Left Hand = 0
-    endIf
+  endIf
+
+  if kShoutEquip
+    akActor.UnequipShout(kShoutEquip as Shout);
+  endIf
 endFunction
 
 ;
@@ -195,67 +183,46 @@ Weapon function FindNearbyWeapon(Actor kActor)
             kLocatedForm = kCurrentForm;
         endIf
     endWhile
+
     return kLocatedForm as Weapon;
 endFunction
 
 ;
-; This function will return the weapon currently wielded by the given Actor.
-; If no weapon is wielded, we will check if they have ammo equipped.
-; If they do, we'll return the ranged weapon of highest value.
-; Otherwise, we will return the melee weapon of highest value.
-; If no weapons are present, we will return None.
+; This function will try every avenue that it can to locate what this actor
+; either has equipped or should have equipped. There are a few checks that
+; we can do to get to some sort of answer.
 ;
-Form function FindEquippedForm(Actor kActor, bool leftHand = false)
-    Weapon kWeaponLeft = kActor.GetEquippedWeapon(true);
-    Weapon kWeaponRight = kActor.GetEquippedWeapon(false);
-    Weapon kWeaponDesired = kActor.GetEquippedWeapon(leftHand);
-    Ammo kEquippedAmmo = GetEquippedAmmo(kActor);
+Form[] function GetEquippedForm(Actor akActor)
+  Form kRightEquip = akActor.GetEquippedObject(1); Right Hand = 1
+  Form kLeftEquip = akActor.GetEquippedObject(0); Left Hand = 0
+  Form kShout = akActor.GetEquippedObject(2); Shout = 2
 
-    Spell kSpellLeft = kActor.GetEquippedSpell(0); Left Hand = 0
-    Spell kSpellRight = kActor.GetEquippedSpell(1); Right Hand = 1
-    Spell kSpellDesired = kActor.GetEquippedSpell((!leftHand) as int);
+  Form[] kEquipment = new Form[3];
+  kEquipment[0] = None;
+  kEquipment[1] = None;
+  kEquipment[2] = None;
 
-    Form kFormDesired = None;
-    
-    ; If there is no weapon or spell in any slot, we'll check
-    ; through the inventory. This one is specifically for when the
-    ; actor is dead.
-    if !kWeaponLeft && !kWeaponRight && !kSpellLeft && !kSpellRight
-        ; First, we need to check if this NPC is dead right now.
-        if kActor.GetKiller()
-            if FindNearbyWeapon(kActor)
-                kWeaponRight = FindNearbyWeapon(kActor);
-            endIf
+  Form kFoundWeapon = None;
+
+  if !kRightEquip && !kLeftEquip
+    if akActor.IsDead()
+      kFoundWeapon = FindNearbyWeapon(akActor);
+      if kFoundWeapon
+        kRightEquip = kFoundWeapon;
+      else
+        kFoundWeapon = GetHighestValueWeapon(akActor, aiWeaponType = 0);
+        if kFoundWeapon
+          kRightEquip = kFoundWeapon;
         endIf
+      endIf
     endIf
+  endif
 
-    ; If there is no weapon or spell in any slot, we'll check
-    ; through the inventory.
-    if !kWeaponLeft && !kWeaponRight && !kSpellLeft && !kSpellRight
-        ; Let's see if this actor has ammo equipped for some reason and no weapon.
-        if kEquippedAmmo
-            ; Now, we need to check if the ammo is bolts so we know what
-            ; weapon to look for in the inventory.
-            if kEquippedAmmo.IsBolt()
-                kWeaponDesired = GetHighestValueWeapon(kActor, 9); Crossbows = 9
-            else
-                kWeaponDesired = GetHighestValueWeapon(kActor, 7); Bows = 7
-           endIf
-       else
-            ; Well, that was a bust, so we need to search through the inventory
-            ; for the highest value weapon.
-            kWeaponDesired = GetHighestValueWeapon(kActor);
-        endIf
-    endIf
-    
-    if kWeaponDesired && !kSpellDesired
-        kFormDesired = kWeaponDesired;
-    elseif kSpellDesired && !kWeaponDesired
-        kFormDesired = kSpellDesired;
-    else
-        kFormDesired = None;
-    endIf
-    return kFormDesired;
+  kEquipment[0] = kLeftEquip;
+  kEquipment[1] = kRightEquip;
+  kEquipment[2] = kShout;
+
+  return kEquipment;
 endFunction
 
 ;
@@ -263,8 +230,8 @@ endFunction
 ; value weapon. If the weapon type is anything but zero, it will look
 ; for a specific type. On zero, it will just return the highest value weapon.
 ;
-Weapon function GetHighestValueWeapon(Actor kActor, int iWeaponType = 0)
-    int iInventoryLength = (kActor as ObjectReference).GetNumItems();
+Weapon function GetHighestValueWeapon(Actor akActor, int aiWeaponType = 0)
+    int iInventoryLength = akActor.GetNumItems();
     int iInventoryIndex = -1;
     int iHighestValue = -1;
     Form kCurrentForm = None;
@@ -272,11 +239,11 @@ Weapon function GetHighestValueWeapon(Actor kActor, int iWeaponType = 0)
 
     while iInventoryIndex < iInventoryLength
         iInventoryIndex += 1;
-        kCurrentForm = kActor.GetNthForm(iInventoryIndex);
+        kCurrentForm = akActor.GetNthForm(iInventoryIndex);
         ; Now, we handle whether we are looking for a specific item type
         ; or not.
-        if iWeaponType
-            if kCurrentForm.GetType() == 41 && (kCurrentForm as Weapon).GetWeaponType() == iWeaponType && kCurrentForm.GetGoldValue() > iHighestValue; kWeapon = 41
+        if aiWeaponType
+            if kCurrentForm.GetType() == 41 && (kCurrentForm as Weapon).GetWeaponType() == aiWeaponType && kCurrentForm.GetGoldValue() > iHighestValue; kWeapon = 41
                 kActorWeapon = kCurrentForm as Weapon;
                 iHighestValue = kCurrentForm.GetGoldValue();
                 kCurrentForm = None;
@@ -291,24 +258,23 @@ Weapon function GetHighestValueWeapon(Actor kActor, int iWeaponType = 0)
     endWhile
 endFunction
 
+
 ;
 ; As far as I can tell, there is no baked-in function to pull what ammo
 ; is equipped by an actor. This function goes around the station to get to
 ; the train in front of it, so to speak.
 ;
-Ammo function GetEquippedAmmo(Actor kActor)
-    int iInventoryLength = (kActor as ObjectReference).GetNumItems();
+Ammo function GetEquippedAmmo(Actor akActor)
+    int iInventoryLength = akActor.GetNumItems();
     int iInventoryIndex = -1;
     Form kCurrentForm = None;
     Ammo kActorAmmo = None;
-    int iAmmoCount = 0;
 
     while iInventoryIndex < iInventoryLength && !kActorAmmo
         iInventoryIndex += 1;
-        kCurrentForm = kActor.GetNthForm(iInventoryIndex);
-        if kCurrentForm.GetType() == 42 && kActor.IsEquipped(kCurrentForm); kAmmo = 42
+        kCurrentForm = akActor.GetNthForm(iInventoryIndex);
+        if kCurrentForm.GetType() == 42 && akActor.IsEquipped(kCurrentForm); kAmmo = 42
             kActorAmmo = kCurrentForm as Ammo;
-            iAmmoCount = (kActor as ObjectReference).GetItemCount(kCurrentForm);
             kCurrentForm = None;
         endIf
     endWhile
