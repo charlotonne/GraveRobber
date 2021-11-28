@@ -21,28 +21,26 @@ Event OnActorAction(int actionType, Actor akActor, Form source, int slot)
   GraveRobber = charGraveRobberLibraryQuestScript.GetScript();
 
 	Actor[] kNearbyActors;
-	int iActorIndex = -1;
+	int iActorIndex = 0;
 	Actor TargetRef = Game.GetCurrentCrosshairRef() as Actor
 
 	; First, let's ensure that it's the player that activated this particular action.
 	if akActor == PlayerRef
-		; First, we'll look for all actors that are close to the player.
-		kNearbyActors = GraveRobber.GetNearbyActors()
-		; Now, we iterate through those nearby actors and add the proper
-		; magic effect onto them.
-		while iActorIndex < kNearbyActors.Length
-			iActorIndex += 1;
-      Debug.Notification("Handling actor #" + iActorIndex + ": " + kNearbyActors[iActorIndex]);
-			if !kNearbyActors[iActorIndex].HasSpell(charNPCListenerSpell);
-				kNearbyActors[iActorIndex].AddSpell(charNPCListenerSpell);
-			endIf
-		endWhile
-    Debug.Notification("Actors all handled!");
-    
+    if actionType == 8
+		  ; First, we'll look for all actors that are close to the player.
+		  kNearbyActors = GraveRobber.GetNearbyActors()
+		  ; Now, we iterate through those nearby actors and add the proper
+		  ; magic effect onto them.
+		  while iActorIndex < kNearbyActors.Length && kNearbyActors[iActorIndex]
+			  kNearbyActors[iActorIndex].AddSpell(charNPCListenerSpell);
+        iActorIndex += 1;
+		  endWhile
+    else
     ; We now want to double-check that whatever the player's
 		; crosshairs are aimed at has also had the spell added.
-		if !TargetRef.HasSpell(charNPCListenerSpell);
-			TargetRef.AddSpell(charNPCListenerSpell);
-		endIf
-	endIf
+		  if !TargetRef.HasSpell(charNPCListenerSpell);
+			  TargetRef.AddSpell(charNPCListenerSpell);
+		  endIf
+	  endIf
+  endIf
 endEvent

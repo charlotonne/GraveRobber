@@ -11,7 +11,7 @@ Form TargetLeftEquip;
 Form TargetRightEquip;
 Form TargetShout;
 Form[] TargetEquipped;
-Ammo TargetAmmo;
+Form TargetAmmo;
 
 int TargetLeftType;
 int TargetRightType;
@@ -43,7 +43,7 @@ Event OnEffectStart(Actor akTarget, Actor akCaster)
 	TargetLeftEquip = TargetEquipped[0];
 	TargetRightEquip = TargetEquipped[1];
   TargetShout = TargetEquipped[2];
-  TargetAmmo = GraveRobber.GetEquippedAmmo(TargetRef);
+  TargetAmmo = TargetEquipped[3];
 
   TargetLeftType = TargetRef.GetEquippedItemType(0); Left Hand = 0
   TargetRightType = TargetRef.GetEquippedItemType(1); Right Hand = 1
@@ -61,7 +61,7 @@ Event OnCombatStateChanged(Actor akTarget, int aeCombatState)
 	  TargetLeftEquip = TargetEquipped[0];
 	  TargetRightEquip = TargetEquipped[1];
     TargetShout = TargetEquipped[2];
-    TargetAmmo = GraveRobber.GetEquippedAmmo(TargetRef);
+    TargetAmmo = TargetEquipped[3];
 
     TargetLeftType = TargetRef.GetEquippedItemType(0); Left Hand = 0
     TargetRightType = TargetRef.GetEquippedItemType(1); Right Hand = 1
@@ -78,7 +78,7 @@ Event onObjectEquipped(Form akBaseObject, ObjectReference akReference)
   TargetLeftEquip = TargetEquipped[0];
   TargetRightEquip = TargetEquipped[1];
   TargetShout = TargetEquipped[2];
-  TargetAmmo = GraveRobber.GetEquippedAmmo(TargetRef);
+  TargetAmmo = TargetEquipped[3];
 
   TargetLeftType = TargetRef.GetEquippedItemType(0); Left Hand = 0
   TargetRightType = TargetRef.GetEquippedItemType(1); Right Hand = 1
@@ -88,7 +88,7 @@ endEvent
 ; It will occur whenever this particular NPC bites the dust.
 Event OnDeath(Actor akKiller)
   GraveRobber = charGraveRobberLibraryQuestScript.GetScript();
-  
+
   int iAmmoCount = 0;
 	; We need to make sure that the event was triggered specifically
 	; by the player killing the NPC.
@@ -100,7 +100,7 @@ Event OnDeath(Actor akKiller)
       ; Fantastic! We know there's some stuff to equip. Hot diggidy!
       ; Now we can put these onto the player!
       if TargetLeftEquip
-        Debug.MessageBox(TargetLeftEquip + " found in left hand.");
+        ;Debug.MessageBox(TargetLeftEquip + " found in left hand.");
         if TargetLeftType != 0 && TargetLeftType != 9
           PlayerRef.AddItem(TargetLeftEquip, aiCount = 1, abSilent = true);
           PlayerRef.EquipItemEx(TargetLeftEquip, equipSlot = 2, preventUnequip = false, equipSound = false);
@@ -112,10 +112,10 @@ Event OnDeath(Actor akKiller)
         endif
       endif
       if TargetRightEquip
-        Debug.MessageBox(TargetRightEquip + " found in right hand.");
+        ;Debug.MessageBox(TargetRightEquip + " found in right hand.");
         if TargetRightType != 0 && TargetRightType != 9
           PlayerRef.AddItem(TargetRightEquip, aiCount = 1, abSilent = true);
-          PlayerRef.EquipItemEx(TargetRightEquip, equipSlot = 1, preventUnequip = false, equipSound = false);
+          PlayerRef.EquipItemEx(TargetRightEquip, equipSlot = 0, preventUnequip = false, equipSound = false);
         elseif TargetRightType == 9
           if !PlayerRef.HasSpell(TargetRightEquip as Spell)
             PlayerRef.AddSpell(TargetRightEquip as Spell);
