@@ -12,3 +12,9 @@ GraveRobber is a plugin developed for use in The Elder Scrolls V: Skyrim. Its us
   2. Unzip the file into wherever you have Skyrim installed. By default (for the Steam edition on Windows), this is:
      `C:\Program Files (x86)\Steam\steamapps\common\Skyrim Special Edition`
   3. Enjoy!
+
+## Contributing
+ 
+### Dependencies
+  - [Skyrim Script Extender (SKSE)](https://skse.silverlock.org/)
+  - [SkyUI 5.1 SDK](https://github.com/schlangster/skyui/wiki)
