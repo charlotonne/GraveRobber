@@ -47,7 +47,7 @@ function UpdateEquipment()
   TargetLeft = GraveRobber.GetEquippedForm(TargetRef, 0);
   TargetRight = GraveRobber.GetEquippedForm(TargetRef, 1);
   TargetShout = GraveRobber.GetEquippedForm(TargetRef, 2);
-  TargetAmmo = GraveRobber.GetEquippedAmmo(TargetRef);
+  TargetAmmo = GraveRobber.GetEquippedAmmo(TargetRef) as Form;
   TargetAmmoCount = TargetRef.GetItemCount(TargetAmmo);
 endFunction
 
@@ -56,7 +56,7 @@ function EquipPlayer()
   GraveRobber.AddForm(PlayerRef, TargetRight, 1);
   GraveRobber.AddForm(PlayerRef, TargetShout, 1);
   GraveRobber.AddForm(PlayerRef, TargetAmmo, TargetAmmoCount);
-  
+
   GraveRobber.EquipForm(PlayerRef, TargetLeft, 0);
   GraveRobber.EquipForm(PlayerRef, TargetRight, 1);
   GraveRobber.EquipForm(PlayerRef, TargetShout, 2);
