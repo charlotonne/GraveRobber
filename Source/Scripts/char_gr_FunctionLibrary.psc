@@ -1,19 +1,19 @@
-ScriptName char_graverobber_FunctionLibrary extends Quest
+ScriptName char_gr_FunctionLibrary extends Quest
 
-Spell property char_graverobber_NPCListenerSpell auto;
+Spell property char_gr_NPCListenerSpell auto;
 
-char_graverobber_FunctionLibrary function EnableFunctions() global
-  return Game.GetFormFromFile(0x00000000, "GraveRobber.esp") as char_graverobber_FunctionLibrary;
+char_gr_FunctionLibrary function EnableFunctions() global
+  return Game.GetFormFromFile(0x00000000, "GraveRobber.esp") as char_gr_FunctionLibrary;
 endFunction
 
 Actor[] function GetCellActors(Cell akCell)
-  Actor[] kActorList = new Actor[0]
+  Actor[] kActorList = new Actor[128]
   int iRefCount = akCell.GetNumRefs(43); kNPC = 43
   int iRefIndex = -1;
 
   while iRefIndex < iRefCount
     iRefIndex += 1;
-    kActorList.add(akCell.GetNthRef(iRefIndex, 43);
+    kActorList[iRefIndex] = akCell.GetNthRef(iRefIndex, 43) as Actor;
   endWhile
 
   return kActorList;
@@ -21,11 +21,13 @@ endFunction
 
 Actor[] function FilterActors(Actor[] akActorList)
   int iIndex = -1;
-  Actor[] kFiltered = new Actor[0]
+  int iRetIndex = -1;
+  Actor[] kFiltered = new Actor[128];
 
   while iIndex < akActorList.length
-    if akActorList[iIndex].HasSpell(char_graverobber_NPCListenerSpell)
-      kFiltered.add(kActorList[iIndex]);
+    if akActorList[iIndex].HasSpell(char_gr_NPCListenerSpell)
+      iRetIndex += 1;
+      kFiltered[iRetIndex] = akActorList[iIndex];
     endIf
   endWhile
 
@@ -33,7 +35,7 @@ Actor[] function FilterActors(Actor[] akActorList)
 endFunction
 
 Form function GetEquippedForm(Actor akActor, int aiSlot)
-  iType = 0;
+  int iType = 0;
   if aiSlot <= 1
     iType = akActor.GetEquippedItemType(aiSlot);
     if iType == 9
@@ -42,6 +44,7 @@ Form function GetEquippedForm(Actor akActor, int aiSlot)
       return akActor.GetEquippedShield() as Form;
     else
       return akActor.GetEquippedWeapon(!(aiSlot as bool)) as Form;
+    endIf
   elseif aiSlot == 2
     return akActor.GetEquippedShout();
   endif
@@ -63,7 +66,7 @@ Ammo function GetEquippedAmmo(Actor akActor)
 endFunction
 
 function EquipForm(Actor akActor, Form akForm, int aiSlot)
-  iType = 0;
+  int iType = 0;
   if akActor && akForm
     if aiSlot <= 1
       iType = akForm.GetType();
@@ -81,6 +84,7 @@ function EquipForm(Actor akActor, Form akForm, int aiSlot)
 endFunction
 
 function AddForm(Actor akActor, Form akForm, int aiCount)
+  int iType = 0;
   if akForm && akActor
     iType = akForm.GetType()
     if iType == 22 || iType == 82

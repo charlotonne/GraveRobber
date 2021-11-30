@@ -1,6 +1,6 @@
-ScriptName char_graverobber_NPCListener extends ActiveMagicEffect
+ScriptName char_gr_NPCListener extends ActiveMagicEffect
 
-char_graverobber_FunctionLibrary GraveRobber = char_graverobber_FunctionLibrary.EnableFunctions();
+char_gr_FunctionLibrary GraveRobber = None;
 
 Actor property PlayerRef auto;
 
@@ -64,6 +64,7 @@ function EquipPlayer()
 endFunction
 
 Event OnEffectStart(Actor akTarget, Actor akCaster)
+  GraveRobber = char_gr_FunctionLibrary.EnableFunctions();
   TargetRef = akTarget;
   UpdateEquipment();
 endEvent
