@@ -1,9 +1,10 @@
 ScriptName char_gr_FunctionLibrary extends Quest
 
+Actor property PlayerRef auto;
 Spell property char_gr_NPCListenerSpell auto;
 
 char_gr_FunctionLibrary function EnableFunctions() global
-  return Game.GetFormFromFile(0x00000000, "GraveRobber.esp") as char_gr_FunctionLibrary;
+  return Game.GetFormFromFile(0x00000801, "GraveRobber.esp") as char_gr_FunctionLibrary;
 endFunction
 
 Actor[] function GetCellActors(Cell akCell)
@@ -25,7 +26,8 @@ Actor[] function FilterActors(Actor[] akActorList)
   Actor[] kFiltered = new Actor[128];
 
   while iIndex < akActorList.length
-    if akActorList[iIndex].HasSpell(char_gr_NPCListenerSpell)
+    iIndex += 1;
+    if !akActorList[iIndex].HasSpell(char_gr_NPCListenerSpell) && akActorList[iIndex] != PlayerRef
       iRetIndex += 1;
       kFiltered[iRetIndex] = akActorList[iIndex];
     endIf

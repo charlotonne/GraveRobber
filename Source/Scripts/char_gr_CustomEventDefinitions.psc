@@ -1,7 +1,7 @@
 ScriptName char_gr_CustomEventDefinitions extends Quest
 
 char_gr_CustomEventDefinitions function EnableEvents() global
-  return Game.GetFormFromFile(0x00000000, "GraveRobber.esp") as char_gr_CustomEventDefinitions;
+  return Game.GetFormFromFile(0x00000802, "GraveRobber.esp") as char_gr_CustomEventDefinitions;
 endFunction
 
 Actor property PlayerRef auto;
@@ -10,6 +10,10 @@ int CellNPCCountLastKnown = 0;
 
 Event OnInit()
   RegisterForSingleUpdate(1.0);
+endEvent
+
+Event OnPlayerLoadGame()
+    RegisterForSingleUpdate(1.0);
 endEvent
 
 Event OnUpdate()
