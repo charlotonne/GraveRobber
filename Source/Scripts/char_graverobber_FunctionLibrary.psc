@@ -32,6 +32,22 @@ Actor[] function FilterActors(Actor[] akActorList)
   return kFiltered;
 endFunction
 
+Form function GetEquippedForm(Actor akActor, int aiSlot)
+  iType = 0;
+  if aiSlot <= 1
+    iType = akActor.GetEquippedItemType(aiSlot);
+    if iType == 9
+      return akActor.GetEquippedSpell(aiSlot) as Form;
+    elseif iType == 10
+      return akActor.GetEquippedShield() as Form;
+    else
+      return akActor.GetEquippedWeapon(!(aiSlot as bool)) as Form;
+  elseif aiSlot == 2
+    return akActor.GetEquippedShout();
+  endif
+  return None;
+endFunction
+
 Ammo function GetEquippedAmmo(Actor akActor)
   int iInvSize = akActor.GetNumItems();
   int iInvIndex = -1
@@ -44,4 +60,39 @@ Ammo function GetEquippedAmmo(Actor akActor)
   endWhile
 
   return None;
+endFunction
+
+function EquipForm(Actor akActor, Form akForm, int aiSlot)
+  iType = 0;
+  if akActor && akForm
+    if aiSlot <= 1
+      iType = akForm.GetType();
+      if iType == 22 || iType == 82
+        akActor.EquipSpell(akForm as Spell, aiSlot);
+      else
+        akActor.EquipItem(akForm, abPreventRemoval = false, abSilent = true);
+      endIf
+    elseif aiSlot == 2
+      akActor.EquipShout(akForm as Shout);
+    elseif aiSlot == 3
+      akActor.EquipItem(akForm, abPreventRemoval = false, abSilent = true);
+    endIf
+  endIf
+endFunction
+
+function AddForm(Actor akActor, Form akForm, int aiCount)
+  if akForm && akActor
+    iType = akForm.GetType()
+    if iType == 22 || iType == 82
+      akActor.AddSpell(akForm as Spell);
+    elseif iType == 119
+      akActor.AddShout(akForm as Shout);
+      ; Using a SKSE function here because there is no viable replacement yet.
+      Game.TeachWord((akForm as Shout).GetNthWordOfPower(0));
+      Game.TeachWord((akForm as Shout).GetNthWordOfPower(1));
+      Game.TeachWord((akForm as Shout).GetNthWordOfPower(2));
+    else
+      akActor.AddItem(akForm, aiCount, abSilent = true);
+    endIf
+  endIf
 endFunction
