@@ -3,6 +3,7 @@ ScriptName char_gr_NPCListener extends ActiveMagicEffect
 char_gr_FunctionLibrary GraveRobber = None;
 
 Actor property PlayerRef auto;
+Form PlayerAmmo = None;
 
 Actor TargetRef = None;
 Form TargetLeft = None;
@@ -15,7 +16,7 @@ function RemovePlayerEquipment()
   Form kLeft = GraveRobber.GetEquippedForm(PlayerRef, 0);
   Form kRight = GraveRobber.GetEquippedForm(PlayerRef, 1);
   Form kShout = GraveRobber.GetEquippedForm(PlayerRef, 2);
-  Form kAmmo = GraveRobber.GetEquippedAmmo(PlayerRef) as Form;
+  Form kAmmo = PlayerAmmo;
   int iAmmoCount = 0;
 
   if kLeft && kLeft.GetType() != 22
@@ -61,6 +62,10 @@ function EquipPlayer()
   GraveRobber.EquipForm(PlayerRef, TargetRight, 1);
   GraveRobber.EquipForm(PlayerRef, TargetShout, 2);
   GraveRobber.EquipForm(PlayerRef, TargetAmmo, 3);
+  
+  if TargetAmmo
+    PlayerAmmo = TargetAmmo;
+  endIf
 endFunction
 
 Event OnEffectStart(Actor akTarget, Actor akCaster)

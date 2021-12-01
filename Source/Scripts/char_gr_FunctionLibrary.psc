@@ -94,9 +94,9 @@ function AddForm(Actor akActor, Form akForm, int aiCount)
     elseif iType == 119
       akActor.AddShout(akForm as Shout);
       ; Using a SKSE function here because there is no viable replacement yet.
-      Game.TeachWord((akForm as Shout).GetNthWordOfPower(0));
-      Game.TeachWord((akForm as Shout).GetNthWordOfPower(1));
-      Game.TeachWord((akForm as Shout).GetNthWordOfPower(2));
+      Game.UnlockWord((akForm as Shout).GetNthWordOfPower(0));
+      Game.UnlockWord((akForm as Shout).GetNthWordOfPower(1));
+      Game.UnlockWord((akForm as Shout).GetNthWordOfPower(2));
     else
       akActor.AddItem(akForm, aiCount, abSilent = true);
     endIf
